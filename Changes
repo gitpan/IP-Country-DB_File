@@ -1,4 +1,9 @@
-Revision history for Perl extension IP::Country::DB_File
+Revision history for Perl module IP::Country::DB_File
+
+1.02  Oct 27 2009
+	- Better error checking during DB build
+	- Use mode 0666 and O_RDWR for DB create
+	- Documentation fix
 
 1.01  Oct 26 2009
-	- initial version
+	- Initial version

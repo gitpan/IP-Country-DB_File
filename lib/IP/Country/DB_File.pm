@@ -10,15 +10,15 @@ use Socket ();
 use vars qw($VERSION @rirs);
 
 BEGIN {
-    $VERSION = '1.01';
+    $VERSION = '1.02';
 
     # Regional Internet Registries
     @rirs = (
-        { name=>'arin',    server=>'ftp.arin.net' },
-        { name=>'ripencc', server=>'ftp.ripe.net' },
+        { name=>'arin',    server=>'ftp.arin.net'    },
+        { name=>'ripencc', server=>'ftp.ripe.net'    },
         { name=>'afrinic', server=>'ftp.afrinic.net' },
-        { name=>'apnic',   server=>'ftp.apnic.net' },
-        { name=>'lacnic',  server=>'ftp.lacnic.net' }
+        { name=>'apnic',   server=>'ftp.apnic.net'   },
+        { name=>'lacnic',  server=>'ftp.lacnic.net'  },
     );
 }
 
@@ -30,13 +30,13 @@ sub new {
 
     my %db;
     my $flags = $writeAccess ?
-        Fcntl::O_CREAT|Fcntl::O_TRUNC :
+        Fcntl::O_RDWR|Fcntl::O_CREAT|Fcntl::O_TRUNC :
         Fcntl::O_RDONLY;
-    $this->{db} = tie(%db, 'DB_File', $dbFile, $flags, 0644,
+    $this->{db} = tie(%db, 'DB_File', $dbFile, $flags, 0666,
                       $DB_File::DB_BTREE)
-        or die("Can't load database $dbFile: $!");
+        or die("Can't open database $dbFile: $!");
     
-    bless($this, $class);
+    return bless($this, $class);
 }
 
 sub importFile {
@@ -70,20 +70,26 @@ sub importFile {
             $lastEnd += $value;
         }
         else {
-            $db->put(pack('N', $lastEnd - 1), pack('Na2', $lastStart, $lastCC))
-                if $lastCC;
+            if($lastCC) {
+                my $key = pack('N', $lastEnd - 1);
+                my $data = pack('Na2', $lastStart, $lastCC);
+                $db->put($key, $data) >= 0 or die("dbput: $!");
+            }
 
             ($lastStart, $lastEnd, $lastCC) = ($ipNum, $ipNum + $value, $cc);
             ++$count;
         }
     }
 
-    $db->put(pack('N', $lastEnd - 1), pack('Na2', $lastStart, $lastCC))
-        if $lastCC;
+    if($lastCC) {
+        my $key = pack('N', $lastEnd - 1);
+        my $data = pack('Na2', $lastStart, $lastCC);
+        $db->put($key, $data) >= 0 or die("dbput: $!");
+    }
     
-    $db->sync();
+    $db->sync() >= 0 or die("dbsync: $!");
     
-    $count;
+    return $count;
 }
 
 sub build {
@@ -113,15 +119,12 @@ sub build {
 sub inet_ntocc {
     my ($this, $addr) = @_;
     
-    my $db = $this->{db}
-        or die("No database present, use build or load first");
-
-    my ($key, $value);
-    $db->seq($key = $addr, $value, DB_File::R_CURSOR()) and return undef;
-
-    my ($start, $cc) = unpack('a4a2', $value);
+    my $db = $this->{db};
+    my ($key, $data);
+    $db->seq($key = $addr, $data, DB_File::R_CURSOR()) and return undef;
+    my ($start, $cc) = unpack('a4a2', $data);
     
-    $addr ge $start ? $cc : undef;
+    return $addr ge $start ? $cc : undef;
 }
 
 sub inet_atocc {
@@ -130,15 +133,12 @@ sub inet_atocc {
     my $addr = Socket::inet_aton($ip);
     return undef unless defined($addr);
     
-    my $db = $this->{db}
-        or die("No database present, use build or load first");
+    my $db = $this->{db};
+    my ($key, $data);
+    $db->seq($key = $addr, $data, DB_File::R_CURSOR()) and return undef;
+    my ($start, $cc) = unpack('a4a2', $data);
     
-    my ($key, $value);
-    $db->seq($key = $addr, $value, DB_File::R_CURSOR()) and return undef;
-
-    my ($start, $cc) = unpack('a4a2', $value);
-    
-    $addr ge $start ? $cc : undef;
+    return $addr ge $start ? $cc : undef;
 }
 
 sub db_time {
@@ -151,7 +151,7 @@ sub db_time {
         or die("Can't stat DB file descriptor: $!\n");
     close(FILE);
     
-    $stat[9]; # mtime
+    return $stat[9]; # mtime
 }
 
 # functions
@@ -262,8 +262,8 @@ updating the database from time to time. It should be no problem to use a
 database built on a different machine as long as the I<libdb> versions are
 compatible.
 
-This module shoule be API compatible with the other L<IP::Country> modules. The
-installation of L<IP::Country> is not required.
+This module tries to be API compatible with the other L<IP::Country> modules.
+The installation of L<IP::Country> is not required.
 
 =head1 CONSTRUCTOR
 
