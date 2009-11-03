@@ -10,7 +10,7 @@ use Socket ();
 use vars qw($VERSION @rirs);
 
 BEGIN {
-    $VERSION = '1.02';
+    $VERSION = '1.03';
 
     # Regional Internet Registries
     @rirs = (
@@ -145,7 +145,8 @@ sub db_time {
     my $this = shift;
     
     local *FILE;
-    open(FILE, '<&', $this->{db}->fd())
+    my $fd = $this->{db}->fd();
+    open(FILE, "<&$fd")
         or die("Can't dup DB file descriptor: $!\n");
     my @stat = stat(FILE)
         or die("Can't stat DB file descriptor: $!\n");
