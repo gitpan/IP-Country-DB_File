@@ -1,22 +1,23 @@
-use Test::More tests => 38;
+use Test::More tests => 51;
 BEGIN { use_ok('IP::Country::DB_File') };
+BEGIN { use_ok('IP::Country::DB_File::Builder') };
 
 my $filename = 't/ipcc.db';
 unlink($filename);
 
-my $ipcc = IP::Country::DB_File->new($filename, 1);
-ok(defined($ipcc), 'new');
+my $builder = IP::Country::DB_File::Builder->new($filename);
+ok(defined($builder), 'new');
 
 local *FILE;
 ok(open(FILE, '<', 't/delegated-test'), 'open source file');
-ok($ipcc->importFile(*FILE) == 81, 'import file');
+ok($builder->import_file(*FILE) == 81, 'import file');
+$builder->store_private_networks();
+$builder->sync();
 close(FILE);
-
-undef($ipcc);
 
 ok(-e $filename, 'create db');
 
-$ipcc = IP::Country::DB_File->new($filename);
+my $ipcc = IP::Country::DB_File->new($filename);
 
 ok(abs($ipcc->db_time() - time()) < 24 * 3600, 'db_time');
 
@@ -26,6 +27,10 @@ my @tests = qw(
     0.0.1.0         ?
     0.1.0.0         ?
     1.2.3.4         ?
+    9.255.255.255   ?
+    10.0.0.0        **
+    10.255.255.255  **
+    11.0.0.0        ?
     24.131.255.255  ?
     24.132.0.0      NL
     24.132.127.255  NL
@@ -43,6 +48,14 @@ my @tests = qw(
     62.12.96.0      ?
     62.12.127.255   ?
     62.12.128.0     CH
+    172.15.255.255  ?
+    172.16.0.0      **
+    172.31.255.255  **
+    172.32.0.0      ?
+    192.167.255.255 ?
+    192.168.0.0     **
+    192.168.255.255 **
+    192.169.0.0     ?
     217.198.128.241 UA
     217.255.255.255 DE
     218.0.0.0       ?
@@ -56,11 +69,11 @@ my @tests = qw(
 );
 
 for(my $i=0; $i<@tests; $i+=2) {
-    my ($ip, $testCC) = ($tests[$i], $tests[$i+1]);
+    my ($ip, $test_cc) = ($tests[$i], $tests[$i+1]);
     #print STDERR ("\n*** $ip $cc ", $ipcc->inet_atocc($ip));
     my $cc = $ipcc->inet_atocc($ip);
     $cc = '?' unless defined($cc);
-    ok($cc eq $testCC, "lookup $ip");
+    ok($cc eq $test_cc, "lookup $ip, got $cc, expected $test_cc");
 }
 
 unlink($filename);

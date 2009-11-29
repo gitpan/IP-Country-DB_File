@@ -5,3 +5,4 @@ README
 t/IP-Country-DB_File.t
 t/delegated-test
 lib/IP/Country/DB_File.pm
+lib/IP/Country/DB_File/Builder.pm
