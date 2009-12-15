@@ -8,5 +8,6 @@ meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
   version: 1.4
 name: IP-Country-DB_File
-requires: {}
-version: 1.99_02
+requires:
+  DB_File: 0
+version: 1.99_03
