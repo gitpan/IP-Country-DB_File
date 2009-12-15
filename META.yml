@@ -1,0 +1,12 @@
+---
+abstract: 'IP to country translation based on DB_File'
+author:
+  - 'Nick Wellnhofer <wellnhofer@aevum.de>'
+generated_by: 'Dist::Zilla version 1.093400'
+license: perl
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: IP-Country-DB_File
+requires: {}
+version: 1.99_02

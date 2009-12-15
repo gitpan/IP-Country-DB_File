@@ -1,6 +1,11 @@
 Revision history for Perl module IP::Country::DB_File
 
-1.99_01  Oct 28 2009
+1.99_02
+	- Add -v option to command function
+	- Remove statistics files when -f or -b fails and -r is also given to
+	  command function
+
+1.99_01  Nov 29 2009
 	- Move DB builder to own package
 	- Support private address ranges
 	- Minor cleanups

@@ -1,14 +1,14 @@
 package IP::Country::DB_File;
 
 use strict;
-use vars qw($VERSION @rirs);
+use vars qw($VERSION);
 
 use DB_File ();
 use Fcntl ();
 use Socket ();
 
 BEGIN {
-    $VERSION = '1.99_01';
+    $VERSION = '1.99_02';
 }
 
 sub new {
@@ -76,6 +76,8 @@ IP::Country::DB_File - IP to country translation based on DB_File
 
 =head1 SYNOPSIS
 
+ use IP::Country::DB_File;
+ 
  my $ipcc = IP::Country::DB_File->new();
  $ipcc->inet_atocc('1.2.3.4');
  $ipcc->inet_atocc('host.example.com');
