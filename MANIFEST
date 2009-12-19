@@ -8,3 +8,5 @@ lib/IP/Country/DB_File.pm
 lib/IP/Country/DB_File/Builder.pm
 t/IP-Country-DB_File.t
 t/delegated-test
+t/release-pod-coverage.t
+t/release-pod-syntax.t
