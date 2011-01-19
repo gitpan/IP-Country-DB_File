@@ -1,14 +1,17 @@
 package IP::Country::DB_File::Builder;
-
+BEGIN {
+  $IP::Country::DB_File::Builder::VERSION = '2.01';
+}
 use strict;
-use vars qw($VERSION @ISA @EXPORT @rirs);
+
+# ABSTRACT: Build an IP address to country code database
+
+use vars qw(@ISA @EXPORT @rirs);
 
 use DB_File ();
 use Fcntl ();
 
 BEGIN {
-    $VERSION = '2.00';
-    
     require Exporter;
     @ISA = qw(Exporter);
     @EXPORT = qw(fetch_files remove_files command);
@@ -66,11 +69,8 @@ sub _store_private_networks {
 sub _import_file {
     my ($this, $file) = @_;
     
-    my $count = 0;
-    my $prev_start = 0;
-    my $prev_end   = 0;
-    my $prev_cc    = '';
     my $seen_header;
+    my @ranges;
 
     while(my $line = readline($file)) {
         next if $line =~ /^#/ or $line !~ /\S/;
@@ -89,19 +89,29 @@ sub _import_file {
 
         my $ip_num = unpack('N', pack('C4', split(/\./, $start)));
 
-        die("IP addresses not sorted (line $.)")
-            if $ip_num < $prev_end;
+        push(@ranges, [ $ip_num, $value, $cc ]);
+    }
+
+    @ranges = sort { $a->[0] <=> $b->[0] } @ranges;
+
+    my $count = 0;
+    my $prev_start = 0;
+    my $prev_end   = 0;
+    my $prev_cc    = '';
+
+    for my $range (@ranges) {
+        my ($ip_num, $size, $cc) = @$range;
 
         if($ip_num == $prev_end && $prev_cc eq $cc) {
             # optimization: concat ranges of same country
-            $prev_end += $value;
+            $prev_end += $size;
         }
         else {
             $this->_store_ip_range($prev_start, $prev_end, $prev_cc)
                 if $prev_cc;
 
             $prev_start = $ip_num;
-            $prev_end   = $ip_num + $value;
+            $prev_end   = $ip_num + $size;
             $prev_cc    = $cc;
             ++$count;
         }
@@ -226,11 +236,17 @@ sub command {
 
 1;
 
-__END__
+
+
+=pod
 
 =head1 NAME
 
 IP::Country::DB_File::Builder - Build an IP address to country code database
+
+=head1 VERSION
+
+version 2.01
 
 =head1 SYNOPSIS
 
@@ -341,10 +357,13 @@ Nick Wellnhofer <wellnhofer@aevum.de>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) Nick Wellnhofer, 2009
+This software is copyright (c) 2011 by Nick Wellnhofer.
 
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself, either Perl version 5.6.0 or,
-at your option, any later version of Perl 5 you may have available.
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =cut
+
+
+__END__
+

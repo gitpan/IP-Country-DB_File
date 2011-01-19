@@ -1,12 +1,13 @@
 
 
-This archive contains the distribution IP-Country-DB_File, version
-2.00:
+This archive contains the distribution IP-Country-DB_File,
+version 2.01:
 
   IP to country translation based on DB_File
 
-This software is copyright (c) 2009 by Nick Wellnhofer.
+This software is copyright (c) 2011 by Nick Wellnhofer.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
+
 

@@ -1,15 +1,14 @@
 package IP::Country::DB_File;
-
+BEGIN {
+  $IP::Country::DB_File::VERSION = '2.01';
+}
 use strict;
-use vars qw($VERSION);
+
+# ABSTRACT: IP to country translation based on DB_File
 
 use DB_File ();
 use Fcntl ();
 use Socket ();
-
-BEGIN {
-    $VERSION = '2.00';
-}
 
 sub new {
     my ($class, $db_file) = @_;
@@ -68,11 +67,17 @@ sub db_time {
 
 1;
 
-__END__
+
+
+=pod
 
 =head1 NAME
 
 IP::Country::DB_File - IP to country translation based on DB_File
+
+=head1 VERSION
+
+version 2.01
 
 =head1 SYNOPSIS
 
@@ -140,10 +145,13 @@ Nick Wellnhofer <wellnhofer@aevum.de>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) Nick Wellnhofer, 2009
+This software is copyright (c) 2011 by Nick Wellnhofer.
 
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself, either Perl version 5.6.0 or,
-at your option, any later version of Perl 5 you may have available.
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =cut
+
+
+__END__
+
