@@ -1,8 +1,9 @@
 package IP::Country::DB_File::Builder;
-BEGIN {
-  $IP::Country::DB_File::Builder::VERSION = '2.01';
+{
+  $IP::Country::DB_File::Builder::VERSION = '2.10';
 }
 use strict;
+use warnings;
 
 # ABSTRACT: Build an IP address to country code database
 
@@ -165,7 +166,7 @@ sub fetch_files {
         my $server = $rir->{server};
         my $name = $rir->{name};
         my $ftp_dir = "/pub/stats/$name";
-        my $filename = "delegated-$name-latest";
+        my $filename = "delegated-$name-extended-latest";
 
         print("fetching ftp://$server$ftp_dir/$filename\n") if $verbose;
 
@@ -236,9 +237,11 @@ sub command {
 
 1;
 
-
+__END__
 
 =pod
+
+=encoding UTF-8
 
 =head1 NAME
 
@@ -246,7 +249,7 @@ IP::Country::DB_File::Builder - Build an IP address to country code database
 
 =head1 VERSION
 
-version 2.01
+version 2.10
 
 =head1 SYNOPSIS
 
@@ -268,11 +271,11 @@ The database is built from the publically available statistics files of the
 Regional Internet Registries. Currently, the files are downloaded from the
 following hard-coded locations:
 
- ftp://ftp.arin.net/pub/stats/arin/delegated-arin-latest
- ftp://ftp.ripe.net/pub/stats/ripencc/delegated-ripencc-latest
- ftp://ftp.afrinic.net/pub/stats/afrinic/delegated-afrinic-latest
- ftp://ftp.apnic.net/pub/stats/apnic/delegated-apnic-latest
- ftp://ftp.lacnic.net/pub/stats/lacnic/delegated-lacnic-latest
+ ftp://ftp.arin.net/pub/stats/arin/delegated-arin-extended-latest
+ ftp://ftp.ripe.net/pub/stats/ripencc/delegated-ripencc-extended-latest
+ ftp://ftp.afrinic.net/pub/stats/afrinic/delegated-afrinic-extended-latest
+ ftp://ftp.apnic.net/pub/stats/apnic/delegated-apnic-extended-latest
+ ftp://ftp.lacnic.net/pub/stats/lacnic/delegated-lacnic-extended-latest
 
 You can build the database directly in Perl, or by calling the I<command>
 subroutine from the command line. Since the country code data changes
@@ -357,13 +360,9 @@ Nick Wellnhofer <wellnhofer@aevum.de>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011 by Nick Wellnhofer.
+This software is copyright (c) 2014 by Nick Wellnhofer.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
 
 =cut
-
-
-__END__
-
