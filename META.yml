@@ -1,5 +1,5 @@
 ---
-abstract: 'IP to country translation based on DB_File'
+abstract: 'IPv4 and IPv6 to country translation using DB_File'
 author:
   - 'Nick Wellnhofer <wellnhofer@aevum.de>'
 build_requires: {}
@@ -14,7 +14,9 @@ meta-spec:
 name: IP-Country-DB_File
 requires:
   DB_File: 0
+  Math::Int64: 0
+  Net::FTP: 0
   perl: 5.008
 resources:
   repository: http://github.com/nwellnhof/IP-Country-DB_File
-version: 2.10
+version: 2.99_01

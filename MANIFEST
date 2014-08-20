@@ -5,10 +5,11 @@ MANIFEST
 META.yml
 Makefile.PL
 README
+bin/build_ipcc.pl
 dist.ini
 lib/IP/Country/DB_File.pm
 lib/IP/Country/DB_File/Builder.pm
-t/IP-Country-DB_File.t
+t/01-basic.t
 t/delegated-test
 t/release-pod-coverage.t
 t/release-pod-syntax.t

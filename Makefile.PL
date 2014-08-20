@@ -10,21 +10,25 @@ use ExtUtils::MakeMaker 6.30;
 
 
 my %WriteMakefileArgs = (
-  "ABSTRACT" => "IP to country translation based on DB_File",
+  "ABSTRACT" => "IPv4 and IPv6 to country translation using DB_File",
   "AUTHOR" => "Nick Wellnhofer <wellnhofer\@aevum.de>",
   "BUILD_REQUIRES" => {},
   "CONFIGURE_REQUIRES" => {
     "ExtUtils::MakeMaker" => "6.30"
   },
   "DISTNAME" => "IP-Country-DB_File",
-  "EXE_FILES" => [],
+  "EXE_FILES" => [
+    "bin/build_ipcc.pl"
+  ],
   "LICENSE" => "perl",
   "NAME" => "IP::Country::DB_File",
   "PREREQ_PM" => {
-    "DB_File" => 0
+    "DB_File" => 0,
+    "Math::Int64" => 0,
+    "Net::FTP" => 0
   },
   "TEST_REQUIRES" => {},
-  "VERSION" => "2.10",
+  "VERSION" => "2.99_01",
   "test" => {
     "TESTS" => "t/*.t"
   }
@@ -32,7 +36,9 @@ my %WriteMakefileArgs = (
 
 
 my %FallbackPrereqs = (
-  "DB_File" => 0
+  "DB_File" => 0,
+  "Math::Int64" => 0,
+  "Net::FTP" => 0
 );
 
 
