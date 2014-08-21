@@ -1,7 +1,5 @@
 package IP::Country::DB_File::Builder;
-{
-  $IP::Country::DB_File::Builder::VERSION = '3.00';
-}
+$IP::Country::DB_File::Builder::VERSION = '3.01';
 use strict;
 use warnings;
 
@@ -14,7 +12,7 @@ use Math::Int64 qw(
     :native_if_available
 );
 use Net::FTP ();
-use Socket ();
+use Socket 1.94 ();
 
 # Regional Internet Registries
 my @rirs = (
@@ -126,7 +124,14 @@ sub _import_file {
             die("IPv6 range too large: $value")
                 if $value > 64;
 
-            my $addr   = Socket::inet_pton(Socket::AF_INET6, $start);
+            my ($err, $result) = Socket::getaddrinfo($start, undef, {
+                flags    => Socket::AI_NUMERICHOST,
+                family   => Socket::AF_INET6,
+                socktype => Socket::SOCK_STREAM,
+            });
+            die($err) if $err;
+            my (undef, $addr) = Socket::unpack_sockaddr_in6($result->{addr});
+
             my $ip_num = net_to_int64(substr($addr, 0, 8));
             my $size   = int64(1) << (64 - $value);
 
@@ -268,7 +273,7 @@ IP::Country::DB_File::Builder - Build an IP address to country code database
 
 =head1 VERSION
 
-version 3.00
+version 3.01
 
 =head1 SYNOPSIS
 

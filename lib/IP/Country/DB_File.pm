@@ -1,7 +1,5 @@
 package IP::Country::DB_File;
-{
-  $IP::Country::DB_File::VERSION = '3.00';
-}
+$IP::Country::DB_File::VERSION = '3.01';
 use strict;
 use warnings;
 
@@ -9,7 +7,7 @@ use warnings;
 
 use DB_File ();
 use Fcntl ();
-use Socket ();
+use Socket 1.94 ();
 
 sub new {
     my ($class, $db_file) = @_;
@@ -75,22 +73,12 @@ sub inet6_ntocc {
 sub inet6_atocc {
     my ($this, $host) = @_;
 
-    my $final_char_code = ord(substr($host, -1));
-    my $addr;
-
-    if ($final_char_code >= 48 && $final_char_code <= 58) {
-        # Host ends with a digit or colon and must be numeric address.
-        $addr = Socket::inet_pton(Socket::AF_INET6, $host);
-        return undef if !defined($addr);
-    }
-    else {
-        my ($err, $result) = Socket::getaddrinfo($host, undef, {
-            family   => Socket::AF_INET6,
-            protocol => Socket::IPPROTO_TCP,
-        });
-        return undef if $err || !$result;
-        $addr = Socket::unpack_sockaddr_in6($result->{addr});
-    }
+    my ($err, $result) = Socket::getaddrinfo($host, undef, {
+        family   => Socket::AF_INET6,
+        socktype => Socket::SOCK_STREAM,
+    });
+    return undef if $err || !$result;
+    my (undef, $addr) = Socket::unpack_sockaddr_in6($result->{addr});
 
     $addr = substr($addr, 0, 8);
 
@@ -131,7 +119,7 @@ IP::Country::DB_File - IPv4 and IPv6 to country translation using DB_File
 
 =head1 VERSION
 
-version 3.00
+version 3.01
 
 =head1 SYNOPSIS
 
@@ -147,7 +135,7 @@ version 3.00
 
 IP::Country::DB_File is a light-weight module for fast IP address to country
 translation based on L<DB_File>. The country code database is stored in a
-Berkeley DB file. You have to build the database using
+Berkeley DB file. You have to build the database using C<build_ipcc.pl> or
 L<IP::Country::DB_File::Builder> before you can lookup country codes.
 
 This module tries to be API compatible with the other L<IP::Country> modules.
