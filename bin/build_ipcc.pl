@@ -62,7 +62,7 @@ build_ipcc.pl - Build database for IP::Country::DB_File
 
 =head1 VERSION
 
-version 2.99_01
+version 3.00
 
 =head1 SYNOPSIS
 

@@ -1,6 +1,6 @@
 package IP::Country::DB_File::Builder;
 {
-  $IP::Country::DB_File::Builder::VERSION = '2.99_01';
+  $IP::Country::DB_File::Builder::VERSION = '3.00';
 }
 use strict;
 use warnings;
@@ -9,7 +9,10 @@ use warnings;
 
 use DB_File ();
 use Fcntl ();
-use Math::Int64 qw(int64 int64_to_net net_to_int64);
+use Math::Int64 qw(
+    int64 int64_to_net net_to_int64
+    :native_if_available
+);
 use Net::FTP ();
 use Socket ();
 
@@ -23,17 +26,14 @@ my @rirs = (
 );
 
 # Constants
-sub EXCLUDE_IPV4 { 1 }
-sub EXCLUDE_IPV6 { 2 }
+sub _EXCLUDE_IPV4 { 1 }
+sub _EXCLUDE_IPV6 { 2 }
 
 sub new {
     my ($class, $db_file) = @_;
     $db_file = 'ipcc.db' unless defined($db_file);
 
-    my $this = {
-        range_count   => 0,
-        address_count => 0,
-    };
+    my $this = {};
 
     my %db;
     my $flags = Fcntl::O_RDWR|Fcntl::O_CREAT|Fcntl::O_TRUNC;
@@ -44,6 +44,11 @@ sub new {
     return bless($this, $class);
 }
 
+# Accessors
+sub num_ranges_v4    { $_[0]->{num_ranges_v4} }
+sub num_ranges_v6    { $_[0]->{num_ranges_v6} }
+sub num_addresses_v4 { $_[0]->{num_addresses_v4} }
+
 sub _store_ip_range {
     my ($this, $type, $start, $end, $cc) = @_;
 
@@ -53,16 +58,17 @@ sub _store_ip_range {
         $key  = pack('aN', '4', $end - 1);
         $data = pack('Na2', $start, $cc);
 
-        $this->{address_count} += $end - $start;
+        $this->{num_ranges_v4}    += 1;
+        $this->{num_addresses_v4} += $end - $start;
     }
     elsif ($type eq 'ipv6') {
         $key  = '6' . int64_to_net($end - 1);
         $data = pack('a8a2', int64_to_net($start), $cc);
+
+        $this->{num_ranges_v6} += 1;
     }
 
     $this->{db}->put($key, $data) >= 0 or die("dbput: $!");
-
-    ++$this->{range_count};
 }
 
 sub _store_private_networks {
@@ -98,11 +104,16 @@ sub _import_file {
             split(/\|/, $line);
 
         next if $start eq '*'; # Summary lines.
+        next if $cc eq '';
 
-        # TODO (paranoid): validate $cc, $start and $value
+        $cc = uc($cc);
+        die("Invalid country code '$cc'")
+            if $cc !~ /^[A-Z]{2}\z/;
+
+        # TODO (paranoid): validate $start and $value
 
         if ($type eq 'ipv4') {
-            next if $flags & EXCLUDE_IPV4;
+            next if $flags & _EXCLUDE_IPV4;
 
             my $ip_num = unpack('N', pack('C4', split(/\./, $start)));
             my $size   = $value;
@@ -110,7 +121,7 @@ sub _import_file {
             push(@ranges_v4, [ $ip_num, $size, $cc ]);
         }
         elsif ($type eq 'ipv6') {
-            next if $flags & EXCLUDE_IPV6;
+            next if $flags & _EXCLUDE_IPV6;
 
             die("IPv6 range too large: $value")
                 if $value > 64;
@@ -217,7 +228,7 @@ sub fetch_files {
         my $ftp_dir = "/pub/stats/$name";
         my $filename = "delegated-$name-extended-latest";
 
-        print("fetching ftp://$server$ftp_dir/$filename\n") if $verbose;
+        print("Fetching ftp://$server$ftp_dir/$filename\n") if $verbose;
 
         my $ftp = Net::FTP->new($server)
             or die("Can't connect to FTP server $server: $@");
@@ -257,7 +268,7 @@ IP::Country::DB_File::Builder - Build an IP address to country code database
 
 =head1 VERSION
 
-version 2.99_01
+version 3.00
 
 =head1 SYNOPSIS
 
@@ -306,6 +317,27 @@ defaults to F<ipcc.db>. The database file is truncated if it already exists.
 
 Builds a database from the statistics files in directory I<$dir>. I<$dir>
 defaults to the current directory.
+
+=head2 num_ranges_v4
+
+    my $num = $builder->num_ranges_v4;
+
+Return the number of (possibly merged) IPv4 address ranges with country
+codes after a database build.
+
+=head2 num_ranges_v6
+
+    my $num = $builder->num_ranges_v6;
+
+Return the number of (possibly merged) IPv6 address ranges with country
+codes after a database build.
+
+=head2 num_addresses_v4
+
+    my $num = $builder->num_addresses_v4;
+
+Return the number of IPv4 addresses with country codes after a database
+build.
 
 =head1 CLASS METHODS
 

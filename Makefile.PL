@@ -28,7 +28,7 @@ my %WriteMakefileArgs = (
     "Net::FTP" => 0
   },
   "TEST_REQUIRES" => {},
-  "VERSION" => "2.99_01",
+  "VERSION" => "3.00",
   "test" => {
     "TESTS" => "t/*.t"
   }

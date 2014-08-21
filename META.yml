@@ -19,4 +19,4 @@ requires:
   perl: 5.008
 resources:
   repository: http://github.com/nwellnhof/IP-Country-DB_File
-version: 2.99_01
+version: 3.00
