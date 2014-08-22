@@ -1,5 +1,7 @@
 package IP::Country::DB_File::Builder;
-$IP::Country::DB_File::Builder::VERSION = '3.01';
+{
+  $IP::Country::DB_File::Builder::VERSION = '3.02';
+}
 use strict;
 use warnings;
 
@@ -27,11 +29,31 @@ my @rirs = (
 sub _EXCLUDE_IPV4 { 1 }
 sub _EXCLUDE_IPV6 { 2 }
 
+# IPv6 support is broken in some Socket versions with older Perls.
+# (RT #98248)
+sub _ipv6_socket_broken {
+    return $^V < 5.14 && $Socket::VERSION >= 2.010;
+}
+
+sub _ipv6_supported {
+    my ($err, $result) = Socket::getaddrinfo('::1', undef, {
+        flags    => Socket::AI_NUMERICHOST,
+        family   => Socket::AF_INET6,
+        socktype => Socket::SOCK_STREAM,
+    });
+
+    return !$err && $result ? 1 : 0;
+}
+
 sub new {
     my ($class, $db_file) = @_;
     $db_file = 'ipcc.db' unless defined($db_file);
 
-    my $this = {};
+    my $this = {
+        num_ranges_v4    => 0,
+        num_ranges_v6    => 0,
+        num_addresses_v4 => 0,
+    };
 
     my %db;
     my $flags = Fcntl::O_RDWR|Fcntl::O_CREAT|Fcntl::O_TRUNC;
@@ -70,17 +92,25 @@ sub _store_ip_range {
 }
 
 sub _store_private_networks {
-    my $this = shift;
+    my ($this, $flags) = @_;
 
-    # 10.0.0.0
-    $this->_store_ip_range('ipv4', 0x0a000000, 0x0b000000, '**');
-    # 172.16.0.0
-    $this->_store_ip_range('ipv4', 0xac100000, 0xac200000, '**');
-    # 192.168.0.0
-    $this->_store_ip_range('ipv4', 0xc0a80000, 0xc0a90000, '**');
+    if (!($flags & _EXCLUDE_IPV4)) {
+        # 10.0.0.0
+        $this->_store_ip_range('ipv4', 0x0a000000, 0x0b000000, '**');
+        # 172.16.0.0
+        $this->_store_ip_range('ipv4', 0xac100000, 0xac200000, '**');
+        # 192.168.0.0
+        $this->_store_ip_range('ipv4', 0xc0a80000, 0xc0a90000, '**');
+    }
 
-    # fc00::/7
-    $this->_store_ip_range('ipv6', int64(0xfc) << 56, int64(0xfe) << 56, '**');
+    if (!($flags & _EXCLUDE_IPV6)) {
+        # fc00::/7
+        $this->_store_ip_range(
+            'ipv6',
+            int64(0xfc) << 56, int64(0xfe) << 56,
+            '**',
+        );
+    }
 }
 
 sub _import_file {
@@ -202,6 +232,19 @@ sub build {
     $dir   = '.' if !defined($dir);
     $flags = 0   if !defined($flags);
 
+    if (!($flags & _EXCLUDE_IPV6)) {
+        if (_ipv6_socket_broken()) {
+            warn("IPv6 support disabled. getaddrinfo is broken in Perl $^V"
+                 . " with Socket $Socket::VERSION.");
+            $flags |= _EXCLUDE_IPV6;
+        }
+        elsif (!_ipv6_supported()) {
+            warn("IPv6 support disabled. It doesn't seem to be supported on"
+                 . " your system.");
+            $flags |= _EXCLUDE_IPV6;
+        }
+    }
+
     for my $rir (@rirs) {
         my $file;
         my $filename = "$dir/delegated-$rir->{name}";
@@ -218,7 +261,7 @@ sub build {
         die("$filename: $error") if $error;
     }
 
-    $this->_store_private_networks();
+    $this->_store_private_networks($flags);
 
     $this->_sync();
 }
@@ -273,7 +316,7 @@ IP::Country::DB_File::Builder - Build an IP address to country code database
 
 =head1 VERSION
 
-version 3.01
+version 3.02
 
 =head1 SYNOPSIS
 

@@ -1,5 +1,7 @@
 package IP::Country::DB_File;
-$IP::Country::DB_File::VERSION = '3.01';
+{
+  $IP::Country::DB_File::VERSION = '3.02';
+}
 use strict;
 use warnings;
 
@@ -119,7 +121,7 @@ IP::Country::DB_File - IPv4 and IPv6 to country translation using DB_File
 
 =head1 VERSION
 
-version 3.01
+version 3.02
 
 =head1 SYNOPSIS
 
