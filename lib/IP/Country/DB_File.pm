@@ -1,7 +1,5 @@
 package IP::Country::DB_File;
-{
-  $IP::Country::DB_File::VERSION = '3.02';
-}
+$IP::Country::DB_File::VERSION = '3.03';
 use strict;
 use warnings;
 
@@ -121,7 +119,7 @@ IP::Country::DB_File - IPv4 and IPv6 to country translation using DB_File
 
 =head1 VERSION
 
-version 3.02
+version 3.03
 
 =head1 SYNOPSIS
 
@@ -155,7 +153,8 @@ IPv6 support.
 
 =item *
 
-Pure Perl.
+Pure Perl. Math::Int64 is needed to build a database with IPv6 addresses
+but the lookup code only uses Perl core modules.
 
 =item *
 

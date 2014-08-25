@@ -1,7 +1,5 @@
 package IP::Country::DB_File::Builder;
-{
-  $IP::Country::DB_File::Builder::VERSION = '3.02';
-}
+$IP::Country::DB_File::Builder::VERSION = '3.03';
 use strict;
 use warnings;
 
@@ -232,17 +230,13 @@ sub build {
     $dir   = '.' if !defined($dir);
     $flags = 0   if !defined($flags);
 
-    if (!($flags & _EXCLUDE_IPV6)) {
-        if (_ipv6_socket_broken()) {
-            warn("IPv6 support disabled. getaddrinfo is broken in Perl $^V"
-                 . " with Socket $Socket::VERSION.");
-            $flags |= _EXCLUDE_IPV6;
-        }
-        elsif (!_ipv6_supported()) {
-            warn("IPv6 support disabled. It doesn't seem to be supported on"
-                 . " your system.");
-            $flags |= _EXCLUDE_IPV6;
-        }
+    if (!($flags & _EXCLUDE_IPV6) && !_ipv6_supported()) {
+        warn("IPv6 support disabled. It doesn't seem to be supported on"
+             . " your system.");
+        warn("This is probably because getaddrinfo is broken in Perl $^V"
+             . " with Socket $Socket::VERSION.")
+            if _ipv6_socket_broken();
+        $flags |= _EXCLUDE_IPV6;
     }
 
     for my $rir (@rirs) {
@@ -316,7 +310,7 @@ IP::Country::DB_File::Builder - Build an IP address to country code database
 
 =head1 VERSION
 
-version 3.02
+version 3.03
 
 =head1 SYNOPSIS
 
